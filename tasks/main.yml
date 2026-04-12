@@ -1,2 +1,38 @@
 ---
 # tasks file for roles/vector-role
+- name: Create Vector directory
+  ansible.builtin.file:
+      path: "/etc/vector"
+      state: directory
+      mode: '0755'
+      owner: ccyberpetya
+- name: Download Vector distrib
+  ansible.builtin.get_url:
+      url: "https://packages.timber.io/vector/{{ vector_version }}/vector-{{ vector_version }}-x86_64-unknown-linux-musl.tar.gz"
+      dest: "/tmp/vector.tar.gz"
+      mode: '0644'
+- name: Unpack Vector
+  ansible.builtin.unarchive:
+      src: "/tmp/vector.tar.gz"
+      dest: "/usr/local/bin"
+      remote_src: true
+      extra_opts: [--strip-components=3]
+      mode: '0755'
+- name: Deploy Vector config from template
+  ansible.builtin.template:
+      src: "vector.toml.j2"
+      dest: "/etc/vector/vector.toml"
+      mode: '0644'
+  notify: Restart Vector
+- name: Deploy Vector systemd unit
+  ansible.builtin.template:
+      src: "vector.service.j2"
+      dest: "/etc/systemd/system/vector.service"
+      mode: '0644'
+  notify: Restart Vector
+- name: Start and enable Vector service
+  ansible.builtin.systemd:
+      name: vector
+      state: started
+      enabled: true
+      daemon_reload: true

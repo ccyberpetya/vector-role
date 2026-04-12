@@ -1,2 +1,3 @@
 ---
 # defaults file for roles/vector-role
+vector_version: "0.34.1"
