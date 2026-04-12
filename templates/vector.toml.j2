@@ -1,0 +1,17 @@
+[sources.my_source]
+type = "file"
+include = ["/var/log/*.log"]
+
+[sinks.to_clickhouse]
+type = "clickhouse"
+inputs = ["my_source"]
+endpoint = "http://{{ hostvars['clickhouse-01'].ansible_host }}:8123"
+database = "logs"
+table = "vector_logs"
+skip_unknown_fields = true
+batch.max_events = 1
+
+[sinks.console]
+type = "console"
+inputs = ["my_source"]
+encoding.codec = "json"
