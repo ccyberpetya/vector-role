@@ -1,0 +1,14 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Check binary exists
+      stat:
+        path: /usr/local/bin/vector
+      register: bin
+    - name: Assert binary exists
+      assert:
+        that: bin.stat.exists
+    - name: Validate config
+      command: /usr/local/bin/vector validate --no-environment /etc/vector/vector.toml

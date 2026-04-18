@@ -1,0 +1,52 @@
+---
+- name: Converge
+  hosts: all
+  gather_facts: false
+  vars:
+    vector_version: "0.34.1"
+  tasks:
+    - name: Create vector user
+      user:
+        name: vector
+        system: yes
+        shell: /bin/false
+        create_home: no
+    - name: Create directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: vector
+        group: vector
+        mode: '0755'
+      loop:
+        - /etc/vector
+        - /var/lib/vector
+    - name: Download vector
+      get_url:
+        url: "https://packages.timber.io/vector/{{ vector_version }}/vector-{{ vector_version }}-x86_64-unknown-linux-musl.tar.gz"
+        dest: /tmp/vector.tar.gz
+    - name: Unpack vector
+      unarchive:
+        src: /tmp/vector.tar.gz
+        dest: /tmp
+        remote_src: yes
+    - name: Copy binary
+      copy:
+        src: /tmp/vector-x86_64-unknown-linux-musl/bin/vector
+        dest: /usr/local/bin/vector
+        mode: '0755'
+        remote_src: yes
+    - name: Create minimal config
+      copy:
+        dest: /etc/vector/vector.toml
+        content: |
+          [sources.in]
+          type = "stdin"
+
+          [sinks.out]
+          type = "console"
+          inputs = ["in"]
+          encoding.codec = "json"
+        owner: vector
+        group: vector
+        mode: '0644'
